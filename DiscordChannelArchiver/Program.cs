@@ -94,7 +94,53 @@ namespace DiscordChannelArchiver
             }
         }
 
-        public List<IMessage> GetMessagesFromChannel(ITextChannel channel)
+        public void GetDirectMessages(ulong UserId)
+        {
+            try
+            {
+                var channel = client.GetUser(UserId).GetOrCreateDMChannelAsync().Result;
+                var messages = DownloadMessagesFromChannel(channel as ITextChannel);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine("Cancelling operation");
+            }
+        }
+
+        public void GetGuildMessages(ulong GuildId)
+        {
+            try
+            {
+                var guild = client.GetGuild(GuildId);
+                var channels = guild.TextChannels;
+                foreach(var channel in channels)
+                {
+                    GetChannelMessages(channel.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine("Cancelling operation");
+            }
+        }
+
+        public void GetChannelMessages(ulong ChannelId)
+        {
+            try
+            {
+                var channel = client.GetChannel(ChannelId) as SocketTextChannel;
+                var messages = DownloadMessagesFromChannel(channel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine("Cancelling operation");
+            }
+        }
+
+        public List<IMessage> DownloadMessagesFromChannel(ITextChannel channel)
         {
             List<IMessage> messages = channel.GetMessagesAsync().Flatten().Result.ToList();
             List<IMessage> tempMessages = new List<IMessage>();
