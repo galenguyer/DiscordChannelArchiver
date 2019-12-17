@@ -157,6 +157,7 @@ namespace DiscordChannelArchiver
 
         public static List<IMessage> DownloadMessagesFromChannel(ITextChannel channel)
         {
+            Console.WriteLine($"Channel {channel.Name} selected");
             List<IMessage> messages = channel.GetMessagesAsync().Flatten().Result.ToList();
             List<IMessage> tempMessages = new List<IMessage>();
             Console.Write($"Getting Messages... {messages.Count}");
@@ -182,6 +183,8 @@ namespace DiscordChannelArchiver
             SaveMessagesToFiles(messages, channel);
             if (downloadFiles)
                 DownloadFiles(messages, channel);
+            if (clearMessages)
+                ClearMessages(messages, channel);
             return messages;
         }
 
@@ -250,6 +253,7 @@ namespace DiscordChannelArchiver
 
         public static void DownloadFiles(List<IMessage> messages, ITextChannel channel)
         {
+            Console.CursorVisible = false;
             Directory.CreateDirectory($"{channel.Id}-data");
             int totalAttachments = messages.Sum(m => m.Attachments.Count());
             int downloadedAttachments = 0;
@@ -272,13 +276,28 @@ namespace DiscordChannelArchiver
                                 Console.WriteLine($"Error {ex.Message} while downloading {attachment.Url}");
                             }
                             Console.SetCursorPosition(0, Console.CursorTop);
-                            Console.Write($"Downloaded {++downloadedAttachments}/{totalAttachments} attachments {new String('.', downloadedAttachments%4)}");
+                            Console.Write($"Downloaded {++downloadedAttachments}/{totalAttachments} attachments {new String('.', (downloadedAttachments%3)+1)}   ");
                         }
                     }
                 }
                 Console.SetCursorPosition(0, Console.CursorTop);
-                Console.WriteLine($"Downloaded {downloadedAttachments}/{totalAttachments} attachments {new String('.', downloadedAttachments % 4)} Done");
+                Console.WriteLine($"Downloaded {downloadedAttachments}/{totalAttachments} attachments {new String('.', (downloadedAttachments%3)+1)} Done");
             }
+        }
+        public static async void ClearMessages(List<IMessage> messages, ITextChannel channel)
+        {
+            Console.CursorVisible = false;
+            messages = messages.Where(m => m.Author.Id == client.CurrentUser.Id).ToList();
+            int messagesToDelete = messages.Count();
+            int messagesDeleted = 0;
+            foreach(var msg in messages)
+            {
+                await msg.DeleteAsync();
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.Write($"Deleted {++messagesDeleted}/{messagesToDelete} messages {new String('.', (messagesToDelete%3)+1)}   ");
+            }
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.WriteLine($"Deleted {messagesDeleted}/{messagesToDelete} messages {new String('.', (messagesToDelete%3)+1)} Done");
         }
     }
 }
