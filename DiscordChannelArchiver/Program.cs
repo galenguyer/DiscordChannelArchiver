@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using ArgumentClinic;
 using Discord;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 
 namespace DiscordChannelArchiver
 {
@@ -164,7 +167,70 @@ namespace DiscordChannelArchiver
             Console.SetCursorPosition(0, Console.CursorTop);
             Console.WriteLine($"Getting Messages... {messages.Count} Done!");
             messages = messages.OrderBy(m => m.Id).Distinct().ToList();
+            SaveMessagesToFiles(messages, channel);
             return messages;
+        }
+
+        public void SaveMessagesToFiles(List<IMessage> messages, ITextChannel channel)
+        {
+            Directory.CreateDirectory($"{channel.Id}-data");
+
+            // Save all messages in a simple format
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach(var msg in messages)
+            {
+                stringBuilder.AppendLine($"{msg.Author.Username}: {msg.Content}");
+                if (msg.Attachments.Any())
+                    foreach (var attachment in msg.Attachments)
+                        stringBuilder.AppendLine($"\t{msg.Id}-{attachment.Filename}");
+            }
+            File.WriteAllText($"{channel.Id}-data/{channel.Id}-messages.txt", stringBuilder.ToString());
+
+            // Save everything as JSON
+            var saveMessages = messages.Select(m => new
+            {
+                m.Id,
+                Author = new
+                {
+                    m.Author.Id,
+                    m.Author.Username,
+                    m.Author.Discriminator
+                },
+                m.Content,
+                Attatchments = m.Attachments,
+                Timestamp = m.CreatedAt
+            });
+            dynamic guild = new { };
+            try
+            {
+                guild = new
+                {
+                    Id = (channel as SocketGuildChannel).Guild.Id,
+                    Name = (channel as SocketGuildChannel).Guild.Name,
+                };
+            }
+            catch { }
+            var saveChannel = new
+            {
+                Guild = guild,
+                Id = channel.Id,
+                Name = channel.Name,
+                PinnedMessages = channel.GetPinnedMessagesAsync().Result.Select(m => new
+                {
+                    m.Id,
+                    Author = new
+                    {
+                        m.Author.Id,
+                        m.Author.Username,
+                        m.Author.Discriminator
+                    },
+                    m.Content,
+                    Attatchments = m.Attachments,
+                    Timestamp = m.CreatedAt
+                }),
+                Messages = saveMessages,
+            };
+            File.WriteAllText($"{channel.Id}-data/{channel.Id}-data.txt", JsonConvert.SerializeObject(saveMessages, Formatting.Indented));
         }
     }
 }
