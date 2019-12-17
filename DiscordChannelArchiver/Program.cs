@@ -35,8 +35,15 @@ namespace DiscordChannelArchiver
 
             downloadFiles = new Switch("-f", "--download-files").ParseArgs(args);
             clearMessages = new Switch("-c", "--clear-messages").ParseArgs(args);
-            TokenType = new Argument<string>("-k", "--token-type", required: true, defaultVal: "user").ParseArgs(args).ToLower();
-            Token = new Argument<string>("-t", "--token", required: true, defaultVal: "").ParseArgs(args);
+            TokenType = new Argument<string>("-k", "--token-type", required: false, defaultVal: "user").ParseArgs(args).ToLower();
+            Token = new Argument<string>("-t", "--token", required: false, defaultVal: "").ParseArgs(args);
+
+            while (string.IsNullOrEmpty(Token))
+            {
+                Console.WriteLine($"Token not set. Please input your token:");
+                Token = Console.ReadLine();
+            }
+
 
             if (!TokenType.Equals("user") && clearMessages)
             {
