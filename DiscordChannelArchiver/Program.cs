@@ -68,6 +68,9 @@ namespace DiscordChannelArchiver
             System.Threading.Thread.Sleep(2000);
             Console.Clear();
             Console.WriteLine($"Logged in as {client.CurrentUser}!");
+            Console.WriteLine($"Options:");
+            Console.WriteLine($"    clear-messages: {clearMessages}");
+            Console.WriteLine($"    download-files: {downloadFiles}");
 
             while (true)
             {
