@@ -257,7 +257,7 @@ namespace DiscordChannelArchiver
                 }),
                 Messages = saveMessages,
             };
-            File.WriteAllText($"{channel.Id}-data/{channel.Id}-data.txt", JsonConvert.SerializeObject(saveChannel, Formatting.Indented));
+            File.WriteAllText($"{channel.Id}-data/{channel.Id}-data.json", JsonConvert.SerializeObject(saveChannel, Formatting.Indented));
             Console.WriteLine("Message files written to disk");
         }
 
