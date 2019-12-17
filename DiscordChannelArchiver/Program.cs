@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArgumentClinic;
 using Discord;
 using Discord.WebSocket;
@@ -90,6 +92,33 @@ namespace DiscordChannelArchiver
                         continue;
                 }
             }
+        }
+
+        public List<IMessage> GetMessagesFromChannel(ITextChannel channel)
+        {
+            List<IMessage> messages = channel.GetMessagesAsync().Flatten().Result.ToList();
+            List<IMessage> tempMessages = new List<IMessage>();
+            Console.Write($"Getting Messages... {messages.Count}");
+            do
+            {
+                try
+                {
+                    tempMessages = channel.GetMessagesAsync(messages.Last(), Direction.Before).Flatten().Result.ToList();
+                    messages.AddRange(tempMessages);
+                    messages = messages.OrderByDescending(m => m.Id).ToList();
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.Write($"Getting Messages... {messages.Count}");
+                }
+                catch
+                {
+
+                }
+            } while (tempMessages.Count == 100);
+
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.WriteLine($"Getting Messages... {messages.Count} Done!");
+            messages = messages.OrderBy(m => m.Id).Distinct().ToList();
+            return messages;
         }
     }
 }
