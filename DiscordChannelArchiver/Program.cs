@@ -7,6 +7,12 @@ namespace DiscordChannelArchiver
 {
     class Program
     {
+        static bool downloadFiles;
+        static bool clearMessages;
+        static string TokenType;
+        static string Token;
+        static DiscordSocketClient client = new DiscordSocketClient();
+
         static void Main(string[] args)
         {
             if(new Switch("-h", "--help").ParseArgs(args))
@@ -21,10 +27,10 @@ namespace DiscordChannelArchiver
                 return;
             }
 
-            bool downloadFiles = new Switch("-f", "--download-files").ParseArgs(args);
-            bool clearMessages = new Switch("-c", "--clear-messages").ParseArgs(args);
-            string TokenType = new Argument<string>("-k", "--token-type", required: true, defaultVal: "user").ParseArgs(args).ToLower();
-            string Token = new Argument<string>("-t", "--token", required: true, defaultVal: "").ParseArgs(args);
+            downloadFiles = new Switch("-f", "--download-files").ParseArgs(args);
+            clearMessages = new Switch("-c", "--clear-messages").ParseArgs(args);
+            TokenType = new Argument<string>("-k", "--token-type", required: true, defaultVal: "user").ParseArgs(args).ToLower();
+            Token = new Argument<string>("-t", "--token", required: true, defaultVal: "").ParseArgs(args);
 
             if(!TokenType.Equals("user") && clearMessages)
             {
@@ -32,7 +38,6 @@ namespace DiscordChannelArchiver
                 return;
             }
 
-            DiscordSocketClient client = new DiscordSocketClient();
             if (TokenType.Equals("user"))
             {
                 client.LoginAsync(Discord.TokenType.User, Token);
