@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using ArgumentClinic;
 using Discord;
@@ -179,6 +180,8 @@ namespace DiscordChannelArchiver
             Console.WriteLine($"Getting Messages... {messages.Count} Done!");
             messages = messages.OrderBy(m => m.Id).Distinct().ToList();
             SaveMessagesToFiles(messages, channel);
+            if (downloadFiles)
+                DownloadFiles(messages, channel);
             return messages;
         }
 
@@ -242,6 +245,40 @@ namespace DiscordChannelArchiver
                 Messages = saveMessages,
             };
             File.WriteAllText($"{channel.Id}-data/{channel.Id}-data.txt", JsonConvert.SerializeObject(saveChannel, Formatting.Indented));
+            Console.WriteLine("Message files written to disk");
+        }
+
+        public static void DownloadFiles(List<IMessage> messages, ITextChannel channel)
+        {
+            Directory.CreateDirectory($"{channel.Id}-data");
+            int totalAttachments = messages.Sum(m => m.Attachments.Count());
+            int downloadedAttachments = 0;
+            Console.Write($"Downloaded {downloadedAttachments}/{totalAttachments} attachments");
+            using (var webClient = new WebClient())
+            {
+                foreach (var msg in messages)
+                {
+                    if (msg.Attachments.Any())
+                    {
+                        foreach (var attachment in msg.Attachments)
+                        {
+                            try
+                            {
+                                webClient.DownloadFile(attachment.Url, $"{channel.Id}-data/{msg.Id}-{attachment.Filename}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine();
+                                Console.WriteLine($"Error {ex.Message} while downloading {attachment.Url}");
+                            }
+                            Console.SetCursorPosition(0, Console.CursorTop);
+                            Console.Write($"Downloaded {++downloadedAttachments}/{totalAttachments} attachments {new String('.', downloadedAttachments%4)}");
+                        }
+                    }
+                }
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.WriteLine($"Downloaded {downloadedAttachments}/{totalAttachments} attachments {new String('.', downloadedAttachments % 4)} Done");
+            }
         }
     }
 }
