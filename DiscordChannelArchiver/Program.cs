@@ -26,6 +26,12 @@ namespace DiscordChannelArchiver
             string TokenType = new Argument<string>("-k", "--token-type", required: true, defaultVal: "user").ParseArgs(args).ToLower();
             string Token = new Argument<string>("-t", "--token", required: true, defaultVal: "").ParseArgs(args);
 
+            if(!TokenType.Equals("user") && clearMessages)
+            {
+                Console.WriteLine("Cannot clear messages without a user token. Exiting.");
+                return;
+            }
+
             DiscordSocketClient client = new DiscordSocketClient();
             if (TokenType.Equals("user"))
             {
@@ -44,6 +50,41 @@ namespace DiscordChannelArchiver
             System.Threading.Thread.Sleep(2000);
             Console.Clear();
             Console.WriteLine($"Logged in as {client.CurrentUser}!");
+
+            while(true)
+            {
+                Console.WriteLine("Please enter the type of channel you'd like to archive: (Can be 'channel', 'server', or 'direct')");
+                string ChannelType = Console.ReadLine().ToLower();
+                ulong ChannelId = 0;
+
+                switch (ChannelType)
+                {
+                    case "channel":
+                       Console.WriteLine("Please enter the Channel ID:");
+                       if(!ulong.TryParse(Console.ReadLine(), out ChannelId))
+                       {
+                            Console.WriteLine("Invalid Channel Id");
+                       }
+                        break;
+                    case "server":
+                        Console.WriteLine("Please enter the Server ID:");
+                        if (!ulong.TryParse(Console.ReadLine(), out ChannelId))
+                        {
+                            Console.WriteLine("Invalid Server Id");
+                        }
+                        break;
+                    case "direct":
+                        Console.WriteLine("Please enter the User ID:");
+                        if (!ulong.TryParse(Console.ReadLine(), out ChannelId))
+                        {
+                            Console.WriteLine("Invalid User Id");
+                        }
+                        break;
+                    default:
+                        Console.WriteLine("Invalid Channel Type");
+                        continue;
+                }
+            }
         }
     }
 }
