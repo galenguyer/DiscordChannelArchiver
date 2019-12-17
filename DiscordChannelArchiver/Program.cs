@@ -20,7 +20,7 @@ namespace DiscordChannelArchiver
 
         static void Main(string[] args)
         {
-            if(new Switch("-h", "--help").ParseArgs(args))
+            if (new Switch("-h", "--help").ParseArgs(args))
             {
                 string helpMsg = $"Required Arguments:\n" +
                     $"  -k --token-type         The type of token you are passing in. Either 'bot' or 'user'\n" +
@@ -37,7 +37,7 @@ namespace DiscordChannelArchiver
             TokenType = new Argument<string>("-k", "--token-type", required: true, defaultVal: "user").ParseArgs(args).ToLower();
             Token = new Argument<string>("-t", "--token", required: true, defaultVal: "").ParseArgs(args);
 
-            if(!TokenType.Equals("user") && clearMessages)
+            if (!TokenType.Equals("user") && clearMessages)
             {
                 Console.WriteLine("Cannot clear messages without a user token. Exiting.");
                 return;
@@ -61,7 +61,7 @@ namespace DiscordChannelArchiver
             Console.Clear();
             Console.WriteLine($"Logged in as {client.CurrentUser}!");
 
-            while(true)
+            while (true)
             {
                 Console.WriteLine("Please enter the type of channel you'd like to archive: (Can be 'channel', 'server', or 'direct')");
                 string ChannelType = Console.ReadLine().ToLower();
@@ -70,24 +70,35 @@ namespace DiscordChannelArchiver
                 switch (ChannelType)
                 {
                     case "channel":
-                       Console.WriteLine("Please enter the Channel ID:");
-                       if(!ulong.TryParse(Console.ReadLine(), out ChannelId))
-                       {
+                        Console.WriteLine("Please enter the Channel ID:");
+                        if (ulong.TryParse(Console.ReadLine(), out ChannelId))
+                        {
+                            GetChannelMessages(ChannelId);
+                        }
+                        else
+                        {
                             Console.WriteLine("Invalid Channel Id");
-                       }
+                        }
                         break;
                     case "server":
                         Console.WriteLine("Please enter the Server ID:");
-                        if (!ulong.TryParse(Console.ReadLine(), out ChannelId))
+                        if (ulong.TryParse(Console.ReadLine(), out ChannelId))
                         {
-                            Console.WriteLine("Invalid Server Id");
+                            GetGuildMessages(ChannelId);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid Channel Id");
                         }
                         break;
                     case "direct":
-                        Console.WriteLine("Please enter the User ID:");
-                        if (!ulong.TryParse(Console.ReadLine(), out ChannelId))
+                        if (ulong.TryParse(Console.ReadLine(), out ChannelId))
                         {
-                            Console.WriteLine("Invalid User Id");
+                            GetDirectMessages(ChannelId);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid Channel Id");
                         }
                         break;
                     default:
@@ -97,27 +108,27 @@ namespace DiscordChannelArchiver
             }
         }
 
-        public void GetDirectMessages(ulong UserId)
+        public static void GetDirectMessages(ulong UserId)
         {
             try
             {
                 var channel = client.GetUser(UserId).GetOrCreateDMChannelAsync().Result;
                 var messages = DownloadMessagesFromChannel(channel as ITextChannel);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Exception: {ex.Message}");
                 Console.WriteLine("Cancelling operation");
             }
         }
 
-        public void GetGuildMessages(ulong GuildId)
+        public static void GetGuildMessages(ulong GuildId)
         {
             try
             {
                 var guild = client.GetGuild(GuildId);
                 var channels = guild.TextChannels;
-                foreach(var channel in channels)
+                foreach (var channel in channels)
                 {
                     GetChannelMessages(channel.Id);
                 }
@@ -129,7 +140,7 @@ namespace DiscordChannelArchiver
             }
         }
 
-        public void GetChannelMessages(ulong ChannelId)
+        public static void GetChannelMessages(ulong ChannelId)
         {
             try
             {
@@ -143,7 +154,7 @@ namespace DiscordChannelArchiver
             }
         }
 
-        public List<IMessage> DownloadMessagesFromChannel(ITextChannel channel)
+        public static List<IMessage> DownloadMessagesFromChannel(ITextChannel channel)
         {
             List<IMessage> messages = channel.GetMessagesAsync().Flatten().Result.ToList();
             List<IMessage> tempMessages = new List<IMessage>();
@@ -171,13 +182,13 @@ namespace DiscordChannelArchiver
             return messages;
         }
 
-        public void SaveMessagesToFiles(List<IMessage> messages, ITextChannel channel)
+        public static void SaveMessagesToFiles(List<IMessage> messages, ITextChannel channel)
         {
             Directory.CreateDirectory($"{channel.Id}-data");
 
             // Save all messages in a simple format
             StringBuilder stringBuilder = new StringBuilder();
-            foreach(var msg in messages)
+            foreach (var msg in messages)
             {
                 stringBuilder.AppendLine($"{msg.Author.Username}: {msg.Content}");
                 if (msg.Attachments.Any())
@@ -230,7 +241,7 @@ namespace DiscordChannelArchiver
                 }),
                 Messages = saveMessages,
             };
-            File.WriteAllText($"{channel.Id}-data/{channel.Id}-data.txt", JsonConvert.SerializeObject(saveMessages, Formatting.Indented));
+            File.WriteAllText($"{channel.Id}-data/{channel.Id}-data.txt", JsonConvert.SerializeObject(saveChannel, Formatting.Indented));
         }
     }
 }
