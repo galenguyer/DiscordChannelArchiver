@@ -225,7 +225,8 @@ namespace DiscordChannelArchiver
                 },
                 m.Content,
                 Attatchments = m.Attachments,
-                Timestamp = m.CreatedAt
+                Timestamp = m.CreatedAt,
+                Embeds = m.Embeds,
             });
             dynamic guild = new { };
             try
@@ -278,7 +279,8 @@ namespace DiscordChannelArchiver
                         {
                             try
                             {
-                                webClient.DownloadFile(attachment.Url, $"{channel.Id}-data/{msg.Id}-{attachment.Filename}");
+                                if(!File.Exists($"{channel.Id}-data/{msg.Id}-{attachment.Filename}"))
+                                    webClient.DownloadFile(attachment.Url, $"{channel.Id}-data/{msg.Id}-{attachment.Filename}");
                             }
                             catch (Exception ex)
                             {
