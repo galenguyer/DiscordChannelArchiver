@@ -169,15 +169,15 @@ namespace DiscordChannelArchiver
         {
             Console.WriteLine($"Channel {channel.Name} selected");
             List<IMessage> messages = channel.GetMessagesAsync().Flatten().Result.ToList();
-            List<IMessage> tempMessages = new List<IMessage>();
+            List<IMessage> tempMessages = messages;
             Console.Write($"Getting Messages... {messages.Count}");
             do
             {
                 try
                 {
-                    tempMessages = channel.GetMessagesAsync(messages.Last(), Direction.Before).Flatten().Result.ToList();
+                    var lastMessage = tempMessages.Aggregate((m1, m2) => m1.Id < m2.Id ? m1 : m2);
+                    tempMessages = channel.GetMessagesAsync(lastMessage, Direction.Before).Flatten().Result.ToList();
                     messages.AddRange(tempMessages);
-                    messages = messages.OrderByDescending(m => m.Id).ToList();
                     Console.SetCursorPosition(0, Console.CursorTop);
                     Console.Write($"Getting Messages... {messages.Count}");
                 }
